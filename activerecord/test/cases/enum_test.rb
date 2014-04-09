@@ -194,6 +194,7 @@ class EnumTest < ActiveRecord::TestCase
       :valid,    # generates #valid?, which conflicts with an AR method
       :save,     # generates #save!, which conflicts with an AR method
       :proposed, # same value as an existing enum
+      :public, :private, :protected, # generates a method that conflict with ruby words
     ]
 
     conflicts.each_with_index do |value, i|
@@ -248,5 +249,41 @@ class EnumTest < ActiveRecord::TestCase
     assert_not invalid_book.valid?
     valid_book = klass.new(status: "written")
     assert valid_book.valid?
+  end
+
+  test "enums are distinct per class" do
+    klass1 = Class.new(ActiveRecord::Base) do
+      self.table_name = "books"
+      enum status: [:proposed, :written]
+    end
+
+    klass2 = Class.new(ActiveRecord::Base) do
+      self.table_name = "books"
+      enum status: [:drafted, :uploaded]
+    end
+
+    book1 = klass1.proposed.create!
+    book1.status = :written
+    assert_equal ['proposed', 'written'], book1.status_change
+
+    book2 = klass2.drafted.create!
+    book2.status = :uploaded
+    assert_equal ['drafted', 'uploaded'], book2.status_change
+  end
+
+  test "enums are inheritable" do
+    subklass1 = Class.new(Book)
+
+    subklass2 = Class.new(Book) do
+      enum status: [:drafted, :uploaded]
+    end
+
+    book1 = subklass1.proposed.create!
+    book1.status = :written
+    assert_equal ['proposed', 'written'], book1.status_change
+
+    book2 = subklass2.drafted.create!
+    book2.status = :uploaded
+    assert_equal ['drafted', 'uploaded'], book2.status_change
   end
 end
