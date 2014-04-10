@@ -67,6 +67,21 @@ module ActiveRecord
           end
         end
 
+        def json_array_to_string(value, column, adapter)
+          casted_values = value.map do |val|
+            if String === val
+              if val == "NULL"
+                "\"#{val}\""
+              else
+                "'#{adapter.type_cast(val, column, true)}'"
+              end
+            else
+              adapter.type_cast(val, column, true)
+            end
+          end
+          "ARRAY[#{casted_values.join(',')}]::json[]"
+        end
+
         def array_to_string(value, column, adapter)
           casted_values = value.map do |val|
             if String === val

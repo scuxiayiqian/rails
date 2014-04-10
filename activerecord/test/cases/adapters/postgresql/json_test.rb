@@ -148,4 +148,20 @@ class PostgresqlJSONTest < ActiveRecord::TestCase
     JsonDataType.update_all payload: { }
     assert_equal({ }, json.reload.payload)
   end
+
+  def test_default_json_array
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: true, :default => []
+      end
+    end
+  end
+
+  def test_default_json_array2
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: true, :default => ['{"type":"visitor", "value": 1}','{"type":"hit", "value": 2}']
+      end
+    end
+  end
 end
