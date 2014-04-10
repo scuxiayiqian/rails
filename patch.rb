@@ -37,6 +37,8 @@ module CustomMoneyDomainPatch
 end
  
 ActiveRecord::ConnectionAdapters::PostgreSQLColumn.send :include, CustomMoneyDomainPatch
+
+#Register an OID type named name with a typcasting object in type. name should correspond to the `typname` column in the `pg_type` table
 ActiveRecord::ConnectionAdapters::PostgreSQLAdapter::OID.tap do |klass|
   klass.register_type('custom_money', klass::Decimal.new)
 end
