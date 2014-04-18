@@ -34,7 +34,7 @@ module ActiveRecord
               if column.array
                 PostgreSQLColumn.json_array_to_string(value, column, self)
               else
-                PostgreSQLColumn.json_to_string(value)
+                super(PostgreSQLColumn.json_to_string(value))
               end
             else
               if column.array
@@ -107,12 +107,7 @@ module ActiveRecord
           when Array
             case column.sql_type
             when 'point' then PostgreSQLColumn.point_to_string(value)
-            when 'json' 
-              if column.array
-                PostgreSQLColumn.json_array_to_string(value, column, self)
-              else
-                PostgreSQLColumn.json_to_string(value)
-              end
+            when 'json' then PostgreSQLColumn.json_to_string(value)
             else
               if column.array
                 PostgreSQLColumn.array_to_string(value, column, self)

@@ -164,4 +164,44 @@ class PostgresqlJSONTest < ActiveRecord::TestCase
       end
     end
   end
+
+  def test_default_json_array_in_array
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: true, :default => [['{"type":"visitor", "value": 1}','{"type":"hit", "value": 2}'],['{"type":"visitor", "value": 2}','{"type":"hit", "value": 3}']]
+      end
+    end
+  end
+
+  def test_default_json_with_hash
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: false, :default => {'test1'=>'1','test2'=>'2'}
+      end
+    end
+  end
+
+  def test_default_json_array_with_hash
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: true, :default => [{'test1'=>'1','test2'=>'2'},{'test3'=>'3'}]
+      end
+    end
+  end
+
+  def test_default_json_with_rubyarray
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: false, :default => [1,2]
+      end
+    end
+  end
+
+  def test_default_json_array_with_rubyarray
+    @connection.transaction do
+      @connection.create_table('venues') do |t|
+        t.json 'slots', array: true, :default => [[1,2],[3,4]]
+      end
+    end
+  end
 end

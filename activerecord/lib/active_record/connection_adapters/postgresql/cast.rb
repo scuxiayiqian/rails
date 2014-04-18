@@ -76,7 +76,7 @@ module ActiveRecord
                 "'#{adapter.type_cast(val, column, true)}'"
               end
             else
-              adapter.type_cast(val, column, true)
+              "'#{adapter.type_cast(val, column, true)}'"
             end
           end
           "ARRAY[#{casted_values.join(',')}]::json[]"
