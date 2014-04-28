@@ -1,3 +1,13 @@
+*   Fix `console` and `generators` blocks defined at different environments.
+
+    Fixes #14748.
+
+    *Rafael Mendonça França*
+
+*   Move configuration of asset precompile list and version to an initializer.
+
+    *Matthew Draper*
+
 *   Do not set the Rails environment to test by default when using test_unit Railtie.
 
     *Konstantin Shabanov*

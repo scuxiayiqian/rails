@@ -761,7 +761,7 @@ Arguments may be bare constant names:
 Math.qualified_const_get("E") # => 2.718281828459045
 ```
 
-These methods are analogous to their builtin counterparts. In particular,
+These methods are analogous to their built-in counterparts. In particular,
 `qualified_constant_defined?` accepts an optional second argument to be
 able to say whether you want the predicate to look in the ancestors.
 This flag is taken into account for each constant in the expression while
@@ -792,7 +792,7 @@ N.qualified_const_defined?("C::X")        # => true
 As the last example implies, the second argument defaults to true,
 as in `const_defined?`.
 
-For coherence with the builtin methods only relative paths are accepted.
+For coherence with the built-in methods only relative paths are accepted.
 Absolute qualified constant names like `::Math::PI` raise `NameError`.
 
 NOTE: Defined in `active_support/core_ext/module/qualified_const.rb`.
@@ -964,20 +964,7 @@ NOTE: Defined in `active_support/core_ext/module/delegation.rb`
 
 There are cases where you need to define a method with `define_method`, but don't know whether a method with that name already exists. If it does, a warning is issued if they are enabled. No big deal, but not clean either.
 
-The method `redefine_method` prevents such a potential warning, removing the existing method before if needed. Rails uses it in a few places, for instance when it generates an association's API:
-
-```ruby
-redefine_method("#{reflection.name}=") do |new_value|
-  association = association_instance_get(reflection.name)
-
-  if association.nil? || association.target != new_value
-    association = association_proxy_class.new(self, reflection)
-  end
-
-  association.replace(new_value)
-  association_instance_set(reflection.name, new_value.nil? ? nil : association)
-end
-```
+The method `redefine_method` prevents such a potential warning, removing the existing method before if needed.
 
 NOTE: Defined in `active_support/core_ext/module/remove_method.rb`
 
@@ -1644,6 +1631,9 @@ Given a string with a qualified constant name, `demodulize` returns the very con
 "Product".demodulize                        # => "Product"
 "Backoffice::UsersController".demodulize    # => "UsersController"
 "Admin::Hotel::ReservationUtils".demodulize # => "ReservationUtils"
+"::Inflections".demodulize                  # => "Inflections"
+"".demodulize                               # => ""
+
 ```
 
 Active Record for example uses this method to compute the name of a counter cache column:
@@ -2920,7 +2910,7 @@ NOTE: Defined in `active_support/core_ext/hash/indifferent_access.rb`.
 
 ### Compacting
 
-The methods `compact` and `compact!` return a Hash without items with `nil` value. 
+The methods `compact` and `compact!` return a Hash without items with `nil` value.
 
 ```ruby
 {a: 1, b: 2, c: nil}.compact # => {a: 1, b: 2}
@@ -3847,7 +3837,7 @@ rescue NameError => e
 end
 ```
 
-NOTE: Defined in `actionpack/lib/abstract_controller/helpers.rb`.
+NOTE: Defined in `active_support/core_ext/name_error.rb`.
 
 Extensions to `LoadError`
 -------------------------
@@ -3870,4 +3860,4 @@ rescue NameError => e
 end
 ```
 
-NOTE: Defined in `actionpack/lib/abstract_controller/helpers.rb`.
+NOTE: Defined in `active_support/core_ext/load_error.rb`.

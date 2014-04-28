@@ -183,21 +183,18 @@ module ActiveRecord
       INDEX_TYPES  = [:fulltext, :spatial]
       INDEX_USINGS = [:btree, :hash]
 
-      class BindSubstitution < Arel::Visitors::MySQL # :nodoc:
-        include Arel::Visitors::BindVisitor
-      end
-
       # FIXME: Make the first parameter more similar for the two adapters
       def initialize(connection, logger, connection_options, config)
         super(connection, logger)
         @connection_options, @config = connection_options, config
         @quoted_column_names, @quoted_table_names = {}, {}
 
+        @visitor = Arel::Visitors::MySQL.new self
+
         if self.class.type_cast_config_to_boolean(config.fetch(:prepared_statements) { true })
           @prepared_statements = true
-          @visitor = Arel::Visitors::MySQL.new self
         else
-          @visitor = unprepared_visitor
+          @prepared_statements = false
         end
       end
 
@@ -610,7 +607,8 @@ module ActiveRecord
         pk_and_sequence && pk_and_sequence.first
       end
 
-      def case_sensitive_modifier(node)
+      def case_sensitive_modifier(node, table_attribute)
+        node = Arel::Nodes.build_quoted node, table_attribute
         Arel::Nodes::Bin.new(node)
       end
 

@@ -338,19 +338,15 @@ module ActiveRecord
           end
       end
 
-      class BindSubstitution < Arel::Visitors::PostgreSQL # :nodoc:
-        include Arel::Visitors::BindVisitor
-      end
-
       # Initializes and connects a PostgreSQL adapter.
       def initialize(connection, logger, connection_parameters, config)
         super(connection, logger)
 
+        @visitor = Arel::Visitors::PostgreSQL.new self
         if self.class.type_cast_config_to_boolean(config.fetch(:prepared_statements) { true })
           @prepared_statements = true
-          @visitor = Arel::Visitors::PostgreSQL.new self
         else
-          @visitor = unprepared_visitor
+          @prepared_statements = false
         end
 
         @connection_parameters, @config = connection_parameters, config
@@ -559,6 +555,17 @@ module ActiveRecord
           @type_map
         end
 
+        def get_oid_type(oid, fmod, column_name)
+          if !type_map.key?(oid)
+            initialize_type_map(type_map, [oid])
+          end
+
+          type_map.fetch(oid, fmod) {
+            warn "unknown OID #{oid}: failed to recognize type of '#{column_name}'. It will be treated as String."
+            type_map[oid] = OID::Identity.new
+          }
+        end
+
         def reload_type_map
           type_map.clear
           initialize_type_map(type_map)
@@ -583,19 +590,25 @@ module ActiveRecord
           type_map
         end
 
-        def initialize_type_map(type_map)
+        def initialize_type_map(type_map, oids = nil)
           if supports_ranges?
-            result = execute(<<-SQL, 'SCHEMA')
+            query = <<-SQL
               SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
               FROM pg_type as t
               LEFT JOIN pg_range as r ON oid = rngtypid
             SQL
           else
-            result = execute(<<-SQL, 'SCHEMA')
+            query = <<-SQL
               SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, t.typtype, t.typbasetype
               FROM pg_type as t
             SQL
           end
+
+          if oids
+            query += "WHERE t.oid::integer IN (%s)" % oids.join(", ")
+          end
+
+          result = execute(query, 'SCHEMA')
           ranges, nodes = result.partition { |row| row['typtype'] == 'r' }
           enums, nodes = nodes.partition { |row| row['typtype'] == 'e' }
           domains, nodes = nodes.partition { |row| row['typtype'] == 'd' }
@@ -644,6 +657,14 @@ module ActiveRecord
         end
 
         FEATURE_NOT_SUPPORTED = "0A000" #:nodoc:
+
+        def execute_and_clear(sql, name, binds)
+          result = without_prepared_statement?(binds) ? exec_no_cache(sql, name, binds) :
+                                                        exec_cache(sql, name, binds)
+          ret = yield result
+          result.clear
+          ret
+        end
 
         def exec_no_cache(sql, name, binds)
           log(sql, name, binds) { @connection.async_exec(sql) }

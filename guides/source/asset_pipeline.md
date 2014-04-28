@@ -56,11 +56,11 @@ the comment operator on that line to later enable the asset pipeline:
 
 To set asset compression methods, set the appropriate configuration options
 in `production.rb` - `config.assets.css_compressor` for your CSS and
-`config.assets.js_compressor` for your Javascript:
+`config.assets.js_compressor` for your JavaScript:
 
 ```ruby
 config.assets.css_compressor = :yui
-config.assets.js_compressor = :uglify
+config.assets.js_compressor = :uglifier
 ```
 
 NOTE: The `sass-rails` gem is automatically used for CSS compression if included
@@ -709,17 +709,17 @@ JS/CSS is excluded, as well as raw JS/CSS files; for example, `.coffee` and
 `.scss` files are **not** automatically included as they compile to JS/CSS.
 
 If you have other manifests or individual stylesheets and JavaScript files to
-include, you can add them to the `precompile` array in `config/application.rb`:
+include, you can add them to the `precompile` array in `config/initializers/assets.rb`:
 
 ```ruby
-config.assets.precompile += ['admin.js', 'admin.css', 'swfObject.js']
+Rails.application.config.assets.precompile += ['admin.js', 'admin.css', 'swfObject.js']
 ```
 
 Or, you can opt to precompile all assets with something like this:
 
 ```ruby
-# config/application.rb
-config.assets.precompile << Proc.new do |path|
+# config/initializers/assets.rb
+Rails.application.config.assets.precompile << Proc.new do |path|
   if path =~ /\.(css|js)\z/
     full_path = Rails.application.assets.resolve(path).to_path
     app_assets_path = Rails.root.join('app', 'assets').to_path
@@ -766,7 +766,7 @@ exception indicating the name of the missing file(s).
 
 #### Far-future Expires Header
 
-Precompiled assets exist on the filesystem and are served directly by your web
+Precompiled assets exist on the file system and are served directly by your web
 server. They do not have far-future headers by default, so to get the benefit of
 fingerprinting you'll have to update your server configuration to add those
 headers.
@@ -1039,6 +1039,14 @@ cache store.
 
 ```ruby
 config.assets.cache_store = :memory_store, { size: 32.megabytes }
+```
+
+To disable the assets cache store:
+
+```ruby
+config.assets.configure do |env|
+  env.cache = ActiveSupport::Cache.lookup_store(:null_store)
+end
 ```
 
 Adding Assets to Your Gems
