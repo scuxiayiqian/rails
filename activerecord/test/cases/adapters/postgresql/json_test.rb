@@ -158,6 +158,9 @@ class PostgresqlJSONTest < ActiveRecord::TestCase
 
     JsonDataType.update_all jsonarr: [{'test1'=>'1','test2'=>'2'}]
     assert_equal([{"test1"=>"1", "test2"=>"2"}], json.reload.jsonarr)    
+
+    JsonDataType.update_all jsonarr: [[1,2],nil,nil]
+    assert_equal([[1,2],nil,nil], json.reload.jsonarr)    
   end
 
   def test_default_json_array
